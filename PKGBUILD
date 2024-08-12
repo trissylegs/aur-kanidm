@@ -16,7 +16,7 @@ pkgname=(
 	$_basename-server
 	$_basename-unixd-clients
 )
-pkgver=1.2.0
+pkgver=1.3.1
 _realver=${pkgver/_/-}
 pkgrel=1
 pkgdesc='A identity management service and clients.'
@@ -26,14 +26,28 @@ arch=(x86_64 aarch64)
 license=(MPL-2.0)
 makedepends=(cargo systemd)
 options=(!buildflags)
-sha256sums=('a6dc0578e61d8445f6fb6bb9a0e17dcd5bfd8412b40d26eceafabe3d92f1ac12')
+sha256sums=('ae6cb97a163cfb79f77ae520ac0267ee6a133d330ebdafdd97d2eb1a4842079c')
 
+_env() {
+    cd "$_basename-$pkgver"
+    export RUST_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    export KANIDM_BUILD_PROFILE=release_linux
+}
 
-build () {
-  cd ${pkgbase}-$_realver
+prepare() {
+    _env
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
 
-  export KANIDM_BUILD_PROFILE="release_suse_generic"
-  cargo build --locked --release --target-dir target
+build() {
+    _env
+    cargo build --locked --release --target-dir target
+}
+
+check() {
+    _env
+    cargo test --frozen --workspace
 }
 
 package_kanidm () {
